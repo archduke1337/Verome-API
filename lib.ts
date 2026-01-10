@@ -19,21 +19,27 @@ export class YTMusic {
         clientName: "WEB_REMIX",
         clientVersion: "1.20251015.03.00",
         platform: "DESKTOP",
+        utcOffsetMinutes: 0,
       },
     };
   }
 
   async search(query: string, filter?: string, continuationToken?: string, ignoreSpelling = false) {
+    // Normalize the query to handle Arabic and other Unicode characters properly
+    const normalizedQuery = query.normalize("NFC");
+    
     const params: any = continuationToken
       ? { continuation: continuationToken }
-      : { query, params: this.getFilterParams(filter) };
+      : { query: normalizedQuery, params: this.getFilterParams(filter) };
 
     const data = await this.makeRequest("search", params);
     return this.parseSearchResults(data);
   }
 
   async getSearchSuggestions(query: string): Promise<string[]> {
-    const data = await this.makeRequest("music/get_search_suggestions", { input: query });
+    // Normalize the query to handle Arabic and other Unicode characters properly
+    const normalizedQuery = query.normalize("NFC");
+    const data = await this.makeRequest("music/get_search_suggestions", { input: normalizedQuery });
     return this.parseSuggestions(data);
   }
 
@@ -433,7 +439,9 @@ export class YouTubeSearch {
     }
     if (!query) throw new Error("Query is required for initial search");
 
-    const response = await fetch(`${this.searchURL}?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`);
+    // Normalize the query to handle Arabic and other Unicode characters properly
+    const normalizedQuery = query.normalize("NFC");
+    const response = await fetch(`${this.searchURL}?search_query=${encodeURIComponent(normalizedQuery)}&sp=EgIQAQ%253D%253D`);
     const html = await response.text();
     this.extractAPIConfig(html);
     return this.parseVideoResults(html);
@@ -445,7 +453,9 @@ export class YouTubeSearch {
     }
     if (!query) throw new Error("Query is required for initial search");
 
-    const response = await fetch(`${this.searchURL}?search_query=${encodeURIComponent(query)}&sp=EgIQAg%253D%253D`);
+    // Normalize the query to handle Arabic and other Unicode characters properly
+    const normalizedQuery = query.normalize("NFC");
+    const response = await fetch(`${this.searchURL}?search_query=${encodeURIComponent(normalizedQuery)}&sp=EgIQAg%253D%253D`);
     const html = await response.text();
     this.extractAPIConfig(html);
     return this.parseChannelResults(html);
@@ -457,7 +467,9 @@ export class YouTubeSearch {
     }
     if (!query) throw new Error("Query is required for initial search");
 
-    const response = await fetch(`${this.searchURL}?search_query=${encodeURIComponent(query)}&sp=EgIQAw%253D%253D`);
+    // Normalize the query to handle Arabic and other Unicode characters properly
+    const normalizedQuery = query.normalize("NFC");
+    const response = await fetch(`${this.searchURL}?search_query=${encodeURIComponent(normalizedQuery)}&sp=EgIQAw%253D%253D`);
     const html = await response.text();
     this.extractAPIConfig(html);
     return this.parsePlaylistResults(html);
@@ -465,7 +477,9 @@ export class YouTubeSearch {
 
   async getSuggestions(query: string): Promise<string[]> {
     try {
-      const url = `${this.suggestionsURL}?ds=yt&client=youtube&q=${encodeURIComponent(query)}`;
+      // Normalize the query to handle Arabic and other Unicode characters properly
+      const normalizedQuery = query.normalize("NFC");
+      const url = `${this.suggestionsURL}?ds=yt&client=youtube&q=${encodeURIComponent(normalizedQuery)}`;
       const response = await fetch(url);
       const text = await response.text();
       
