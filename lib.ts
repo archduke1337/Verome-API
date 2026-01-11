@@ -24,7 +24,7 @@ export class YTMusic {
     };
   }
 
-  async search(query: string, filter?: string, continuationToken?: string, ignoreSpelling = false) {
+  async search(query: string, filter?: string, continuationToken?: string, _ignoreSpelling = false, region?: string, language?: string) {
     // Normalize the query to handle Arabic and other Unicode characters properly
     const normalizedQuery = query.normalize("NFC");
     
@@ -35,7 +35,16 @@ export class YTMusic {
         ? { query: normalizedQuery, params: filterParams }
         : { query: normalizedQuery };
 
-    const data = await this.makeRequest("search", params);
+    // Use custom context if region or language specified
+    const context = (region || language) ? {
+      client: {
+        ...this.context.client,
+        gl: region || this.context.client.gl,
+        hl: language || this.context.client.hl,
+      }
+    } : this.context;
+
+    const data = await this.makeRequestWithContext("search", params, context);
     return this.parseSearchResults(data);
   }
 
@@ -246,16 +255,31 @@ export class YTMusic {
     return response.json();
   }
 
+  private async makeRequestWithContext(endpoint: string, params: any, context: any) {
+    const url = `${this.baseURL}/${endpoint}?key=${this.apiKey}`;
+    const body = { context, ...params };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return response.json();
+  }
+
   private getFilterParams(filter?: string): string | undefined {
-    // Return undefined for no filter (searches everything)
+    // Return undefined for no filter (searches everything - mixed results)
     if (!filter) return undefined;
     
+    // These params are from YouTube Music's actual web requests
     const filterMap: Record<string, string> = {
-      songs: "EgWKAQIIAWoKEAMQBBAJEAoQBQ%3D%3D",
-      videos: "EgWKAQIQAWoKEAMQBBAJEAoQBQ%3D%3D",
-      albums: "EgWKAQIYAWoKEAMQBBAJEAoQBQ%3D%3D",
-      artists: "EgWKAQIgAWoKEAMQBBAJEAoQBQ%3D%3D",
-      playlists: "EgWKAQIoAWoKEAMQBBAJEAoQBQ%3D%3D",
+      songs: "EgWKAQIIAWoKEAkQAxAEEAoQBQ%3D%3D",
+      videos: "EgWKAQIQAWoKEAkQAxAEEAoQBQ%3D%3D",
+      albums: "EgWKAQIYAWoKEAkQAxAEEAoQBQ%3D%3D",
+      artists: "EgWKAQIgAWoKEAkQAxAEEAoQBQ%3D%3D",
+      playlists: "EgWKAQIoAWoKEAkQAxAEEAoQBQ%3D%3D",
+      community_playlists: "EgeKAQQoAEABagoQAxAEEAkQChAF",
+      featured_playlists: "EgeKAQQoADgBagoQAxAEEAkQChAF",
     };
     return filterMap[filter] || undefined;
   }
@@ -287,6 +311,13 @@ export class YTMusic {
     if (results.length === 0) {
       const sections = data?.contents?.tabbedSearchResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
       for (const section of sections) {
+        // Handle top result card (musicCardShelfRenderer)
+        if (section.musicCardShelfRenderer) {
+          const card = section.musicCardShelfRenderer;
+          const topResult = this.parseTopResultCard(card);
+          if (topResult) results.push(topResult);
+        }
+        // Handle regular shelf results
         if (section.musicShelfRenderer) {
           for (const item of section.musicShelfRenderer.contents || []) {
             const parsed = this.parseMusicItem(item.musicResponsiveListItemRenderer);
@@ -298,6 +329,51 @@ export class YTMusic {
     }
 
     return { results, continuationToken };
+  }
+
+  private parseTopResultCard(card: any) {
+    if (!card) return null;
+    
+    const title = card.title?.runs?.[0]?.text;
+    const subtitleRuns = card.subtitle?.runs || [];
+    const thumbnail = card.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.[0]?.url;
+    
+    // Extract video ID from various possible locations
+    const videoId = card.onTap?.watchEndpoint?.videoId ||
+                    card.buttons?.[0]?.buttonRenderer?.command?.watchEndpoint?.videoId;
+    
+    // Extract browse ID for artists/albums
+    const browseId = card.onTap?.browseEndpoint?.browseId;
+    
+    // Determine type from subtitle
+    const subtitleText = subtitleRuns.map((r: any) => r.text).join("");
+    let resultType = "song";
+    if (subtitleText.toLowerCase().includes("video") || subtitleText.toLowerCase().includes("vidéo")) {
+      resultType = "video";
+    } else if (subtitleText.toLowerCase().includes("artist") || subtitleText.toLowerCase().includes("artiste")) {
+      resultType = "artist";
+    } else if (subtitleText.toLowerCase().includes("album")) {
+      resultType = "album";
+    } else if (subtitleText.toLowerCase().includes("playlist")) {
+      resultType = "playlist";
+    }
+    
+    // Extract artist name from subtitle
+    const artistRun = subtitleRuns.find((r: any) => 
+      r.navigationEndpoint?.browseEndpoint?.browseEndpointContextSupportedConfigs?.browseEndpointContextMusicConfig?.pageType === "MUSIC_PAGE_TYPE_ARTIST"
+    );
+    const artists = artistRun ? [{ name: artistRun.text, id: artistRun.navigationEndpoint?.browseEndpoint?.browseId }] : [];
+    
+    return {
+      title,
+      thumbnails: [{ url: thumbnail }],
+      videoId,
+      browseId,
+      artists,
+      resultType,
+      isTopResult: true,
+      subtitle: subtitleText,
+    };
   }
 
   private parseSuggestions(data: any): string[] {

@@ -100,13 +100,15 @@ async function handler(req: Request): Promise<Response> {
       const filter = searchParams.get("filter") || undefined;
       const continuationToken = searchParams.get("continuationToken") || undefined;
       const ignoreSpelling = searchParams.get("ignore_spelling") === "true";
+      const region = searchParams.get("region") || searchParams.get("gl") || undefined;
+      const language = searchParams.get("language") || searchParams.get("hl") || undefined;
 
       if (!query && !continuationToken) {
         return error("Missing required query parameter 'q' or 'continuationToken'");
       }
 
-      const results = await ytmusic.search(query || "", filter, continuationToken, ignoreSpelling);
-      return json({ query, filter, ...results });
+      const results = await ytmusic.search(query || "", filter, continuationToken, ignoreSpelling, region, language);
+      return json({ query, filter, region, language, ...results });
     }
 
     // Search suggestions
