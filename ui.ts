@@ -7,6 +7,7 @@ export const html = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://verome-api.deno.dev https://www.youtube.com https://i.ytimg.com https://img.youtube.com; script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com;">
   <title>Virome API</title>
   <link rel="icon" href="/assets/logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -209,7 +210,16 @@ export const html = `<!DOCTYPE html>
   <div id="ytplayer"></div>
 </body>
 <script>
-(function(){var e=console.error;console.error=function(){var m=arguments[0]||'';if(typeof m==='string'&&(m.includes('postMessage')||m.includes('youtube')))return;e.apply(console,arguments)}})();
+// Suppress YouTube IFrame API errors and network failures
+(function(){
+  var oe=console.error,ow=console.warn,ol=console.log;
+  var block=['postMessage','youtube','ERR_BLOCKED','ptracking','log_event','pagead','generate_204','yout_og'];
+  function shouldBlock(args){for(var i=0;i<args.length;i++){var m=String(args[i]||'');for(var j=0;j<block.length;j++)if(m.includes(block[j]))return true}return false}
+  console.error=function(){if(!shouldBlock(arguments))oe.apply(console,arguments)};
+  console.warn=function(){if(!shouldBlock(arguments))ow.apply(console,arguments)};
+  window.addEventListener('error',function(e){if(e.message&&block.some(b=>e.message.includes(b))){e.preventDefault();return false}},true);
+  window.addEventListener('unhandledrejection',function(e){if(e.reason&&block.some(b=>String(e.reason).includes(b))){e.preventDefault();return false}},true);
+})();
 var tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
 var songs=[],yt=null,ready=false,playing=false,idx=-1,interval=null;
 document.getElementById('query').onkeypress=e=>{if(e.key==='Enter')search()};
