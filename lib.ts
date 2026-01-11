@@ -69,14 +69,51 @@ export class YTMusic {
 
   async getAlbum(browseId: string) {
     const data = await this.makeRequest("browse", { browseId });
-    const header = data?.header?.musicDetailHeaderRenderer || data?.header?.musicImmersiveHeaderRenderer || {};
-    const contents = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
+    
+    // Handle different header types
+    const header = data?.header?.musicDetailHeaderRenderer || 
+                   data?.header?.musicImmersiveHeaderRenderer || 
+                   data?.header?.musicVisualHeaderRenderer || {};
+    
+    // Handle both single and two column layouts
+    const singleColumn = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents;
+    const twoColumn = data?.contents?.twoColumnBrowseResultsRenderer?.secondaryContents?.sectionListRenderer?.contents;
+    const contents = singleColumn || twoColumn || [];
+    
+    // Extract title and artist from header
+    const title = header.title?.runs?.[0]?.text;
+    const subtitleRuns = header.subtitle?.runs || header.straplineTextOne?.runs || [];
+    const artist = subtitleRuns.find((r: any) => r.navigationEndpoint)?.text || subtitleRuns[0]?.text;
+    
+    // Get thumbnail
+    const thumbnail = header.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url ||
+                      header.thumbnail?.croppedSquareThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url;
+    
+    // Parse tracks
+    const tracks = this.parseTracksFromContents(contents);
+    
+    // Get album metadata from two column layout
+    const primaryContents = data?.contents?.twoColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
+    let year = "";
+    let trackCount = tracks.length;
+    
+    for (const section of primaryContents) {
+      const descShelf = section.musicDescriptionShelfRenderer;
+      if (descShelf) {
+        const subHeader = descShelf.subheader?.runs?.[0]?.text || "";
+        const yearMatch = subHeader.match(/\d{4}/);
+        if (yearMatch) year = yearMatch[0];
+      }
+    }
     
     return {
-      title: header.title?.runs?.[0]?.text,
-      artist: header.subtitle?.runs?.[0]?.text,
-      thumbnail: header.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.[0]?.url,
-      tracks: this.parseTracksFromContents(contents),
+      browseId,
+      title,
+      artist,
+      thumbnail,
+      year,
+      trackCount,
+      tracks,
     };
   }
 
@@ -84,10 +121,49 @@ export class YTMusic {
     const data = await this.makeRequest("browse", { browseId });
     const header = data?.header?.musicImmersiveHeaderRenderer || data?.header?.musicVisualHeaderRenderer || {};
     
+    // Get contents for top songs, albums, etc.
+    const contents = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
+    
+    // Parse sections
+    const topSongs: any[] = [];
+    const albums: any[] = [];
+    const singles: any[] = [];
+    const videos: any[] = [];
+    
+    for (const section of contents) {
+      const shelf = section.musicShelfRenderer;
+      const carousel = section.musicCarouselShelfRenderer;
+      
+      if (shelf) {
+        const title = shelf.title?.runs?.[0]?.text?.toLowerCase() || "";
+        if (title.includes("song")) {
+          for (const item of shelf.contents || []) {
+            const parsed = this.parseMusicItem(item.musicResponsiveListItemRenderer);
+            if (parsed) topSongs.push(parsed);
+          }
+        }
+      }
+      
+      if (carousel) {
+        const title = carousel.header?.musicCarouselShelfBasicHeaderRenderer?.title?.runs?.[0]?.text?.toLowerCase() || "";
+        const items = (carousel.contents || []).map((item: any) => this.parseTwoRowItem(item.musicTwoRowItemRenderer)).filter(Boolean);
+        
+        if (title.includes("album")) albums.push(...items);
+        else if (title.includes("single")) singles.push(...items);
+        else if (title.includes("video")) videos.push(...items);
+      }
+    }
+    
     return {
+      browseId,
       name: header.title?.runs?.[0]?.text,
       description: header.description?.runs?.[0]?.text,
-      thumbnail: header.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.[0]?.url,
+      thumbnail: header.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url,
+      subscribers: header.subscriptionButton?.subscribeButtonRenderer?.subscriberCountText?.runs?.[0]?.text,
+      topSongs,
+      albums,
+      singles,
+      videos,
     };
   }
 
@@ -141,14 +217,29 @@ export class YTMusic {
   }
 
   async getPlaylist(playlistId: string) {
-    const data = await this.makeRequest("browse", { browseId: `VL${playlistId.replace(/^VL/, "")}` });
-    const header = data?.header?.musicDetailHeaderRenderer || {};
-    const contents = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
-
+    const browseId = `VL${playlistId.replace(/^VL/, "")}`;
+    const data = await this.makeRequest("browse", { browseId });
+    
+    // Handle different header types
+    const header = data?.header?.musicDetailHeaderRenderer || 
+                   data?.header?.musicEditablePlaylistDetailHeaderRenderer?.header?.musicDetailHeaderRenderer || {};
+    
+    // Handle both single and two column layouts
+    const singleColumn = data?.contents?.singleColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents;
+    const twoColumn = data?.contents?.twoColumnBrowseResultsRenderer?.secondaryContents?.sectionListRenderer?.contents;
+    const contents = singleColumn || twoColumn || [];
+    
+    // Parse subtitle for author and track count
+    const subtitleRuns = header.subtitle?.runs || [];
+    const author = subtitleRuns.find((r: any) => r.navigationEndpoint)?.text || subtitleRuns[0]?.text;
+    
     return {
+      playlistId: playlistId.replace(/^VL/, ""),
       title: header.title?.runs?.[0]?.text,
-      author: header.subtitle?.runs?.[0]?.text,
-      thumbnail: header.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.[0]?.url,
+      author,
+      description: header.description?.runs?.[0]?.text,
+      thumbnail: header.thumbnail?.croppedSquareThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url ||
+                 header.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url,
       tracks: this.parseTracksFromContents(contents),
     };
   }
@@ -216,10 +307,30 @@ export class YTMusic {
     const data = await response.json();
 
     const secondaryResults = data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results || [];
+    const results: any[] = [];
     
-    return secondaryResults
-      .filter((item: any) => item.compactVideoRenderer)
-      .map((item: any) => {
+    for (const item of secondaryResults) {
+      // Handle new lockupViewModel format
+      if (item.lockupViewModel) {
+        const lockup = item.lockupViewModel;
+        const metadata = lockup.metadata?.lockupMetadataViewModel;
+        const contentImage = lockup.contentImage?.collectionThumbnailViewModel?.primaryThumbnail?.thumbnailViewModel;
+        
+        const videoIdMatch = lockup.rendererContext?.commandContext?.onTap?.innertubeCommand?.watchEndpoint?.videoId ||
+                            lockup.contentId;
+        
+        if (videoIdMatch) {
+          results.push({
+            videoId: videoIdMatch,
+            title: metadata?.title?.content,
+            artist: metadata?.metadata?.contentMetadataViewModel?.metadataRows?.[0]?.metadataParts?.[0]?.text?.content,
+            thumbnail: contentImage?.image?.sources?.[0]?.url,
+            duration: metadata?.metadata?.contentMetadataViewModel?.metadataRows?.[0]?.metadataParts?.[2]?.text?.content,
+          });
+        }
+      }
+      // Handle old compactVideoRenderer format (fallback)
+      else if (item.compactVideoRenderer) {
         const video = item.compactVideoRenderer;
         const durationText = video.lengthText?.simpleText || "";
         let durationSeconds = 0;
@@ -229,18 +340,19 @@ export class YTMusic {
           else if (parts.length === 3) durationSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
         }
 
-        return {
-          videoId: video.videoId,
-          title: video.title?.simpleText || video.title?.runs?.[0]?.text,
-          artist: video.shortBylineText?.runs?.[0]?.text,
-          thumbnail: video.thumbnail?.thumbnails?.[0]?.url,
-          duration: durationText,
-          duration_seconds: durationSeconds,
-          isShort: durationSeconds > 0 && durationSeconds <= 60,
-        };
-      })
-      .filter((v: any) => v.videoId && !v.isShort)
-      .slice(0, 20);
+        if (video.videoId && !(durationSeconds > 0 && durationSeconds <= 60)) {
+          results.push({
+            videoId: video.videoId,
+            title: video.title?.simpleText || video.title?.runs?.[0]?.text,
+            artist: video.shortBylineText?.runs?.[0]?.text,
+            thumbnail: video.thumbnail?.thumbnails?.[0]?.url,
+            duration: durationText,
+          });
+        }
+      }
+    }
+    
+    return results.slice(0, 20);
   }
 
   private async makeRequest(endpoint: string, params: any) {
