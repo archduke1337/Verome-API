@@ -989,14 +989,20 @@ export async function fetchFromPiped(videoId: string) {
       const data = await response.json();
 
       if (data?.audioStreams?.length) {
+        // Get the proxy host from the instance (e.g., pipedapi.kavin.rocks -> pipedproxy.kavin.rocks)
+        const instanceUrl = new URL(instance);
+        const proxyHost = instanceUrl.host.replace('pipedapi', 'pipedproxy').replace('api.', 'proxy.');
+        
         return {
           success: true,
           instance,
           streamingUrls: data.audioStreams.map((s: any) => ({
+            // Piped streams are already proxied through their CDN
             url: s.url,
             quality: s.quality,
             mimeType: s.mimeType,
             bitrate: s.bitrate,
+            proxyHost,
           })),
           metadata: {
             id: videoId,
@@ -1006,6 +1012,8 @@ export async function fetchFromPiped(videoId: string) {
             duration: data.duration,
             views: data.views,
           },
+          // Include HLS stream if available (better for streaming)
+          hlsUrl: data.hls,
         };
       }
     } catch {
@@ -1030,14 +1038,19 @@ export async function fetchFromInvidious(videoId: string) {
           f.type?.includes("audio") || f.mimeType?.includes("audio")
         );
 
+        // Use Invidious proxy URLs instead of direct googlevideo URLs
+        // This bypasses IP restrictions by having Invidious proxy the stream
         return {
           success: true,
           instance,
           streamingUrls: audioFormats.map((f: any) => ({
-            url: f.url,
+            // Use the instance's proxy endpoint
+            url: `${instance}/latest_version?id=${videoId}&itag=${f.itag}`,
+            directUrl: f.url, // Keep original for reference
             bitrate: f.bitrate,
             type: f.type,
             audioQuality: f.audioQuality,
+            itag: f.itag,
           })),
           metadata: {
             id: videoId,

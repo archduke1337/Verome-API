@@ -15,7 +15,11 @@
   "deploy": {
     "project": "85252de3-9b36-4d8b-b250-e491b4131838",
     "exclude": [
-      "**/node_modules"
+      "**/node_modules",
+      "Music/**",
+      "virome-music/**",
+      ".git/**",
+      ".vscode/**"
     ],
     "include": [],
     "entrypoint": "mod.ts"

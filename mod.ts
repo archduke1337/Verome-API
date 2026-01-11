@@ -164,12 +164,13 @@ async function handler(req: Request): Promise<Response> {
 
     // ============ SEARCH ENDPOINTS ============
     
-    // YouTube Music Search
+    // YouTube Music Search with YouTube fallback video IDs
     if (pathname === "/api/search") {
       const query = searchParams.get("q");
       const filter = searchParams.get("filter") || undefined;
       const continuationToken = searchParams.get("continuationToken") || undefined;
       const ignoreSpelling = searchParams.get("ignore_spelling") === "true";
+      const withFallback = searchParams.get("fallback") !== "0"; // Enable by default
       
       // Get region from param or detect from IP
       let region = searchParams.get("region") || searchParams.get("gl") || undefined;
@@ -189,6 +190,43 @@ async function handler(req: Request): Promise<Response> {
       }
 
       const results = await ytmusic.search(query || "", filter, continuationToken, ignoreSpelling, region, language);
+      
+      // For songs, add fallback YouTube video IDs (embeddable versions)
+      if (withFallback && filter === "songs" && results.results?.length > 0) {
+        // Get YouTube video alternatives for the top results
+        const enhancedResults = await Promise.all(
+          results.results.slice(0, 10).map(async (song: any) => {
+            try {
+              // Search YouTube for official video
+              const searchQuery = `${song.title} ${song.artists?.[0]?.name || ''} official`;
+              const ytResults = await youtubeSearch.searchVideos(searchQuery);
+              
+              // Find a non-Topic channel video
+              const alternative = ytResults.results?.find((v: any) => 
+                v.channel?.name && !v.channel.name.includes('Topic') && v.id
+              );
+              
+              if (alternative) {
+                return {
+                  ...song,
+                  fallbackVideoId: alternative.id,
+                  fallbackTitle: alternative.title,
+                };
+              }
+            } catch {
+              // Ignore errors, just return original
+            }
+            return song;
+          })
+        );
+        
+        // Replace first 10 results with enhanced ones, keep the rest
+        results.results = [
+          ...enhancedResults,
+          ...results.results.slice(10)
+        ];
+      }
+      
       return json({ query, filter, region, language, ...results });
     }
 
@@ -461,7 +499,7 @@ async function handler(req: Request): Promise<Response> {
       if (!audioUrl) {
         return error("Missing url parameter");
       }
-      return proxyAudio(audioUrl);
+      return proxyAudio(audioUrl, req);
     }
 
     if (pathname === "/api/feed/unauthenticated" || pathname.startsWith("/api/feed/channels=")) {
@@ -601,32 +639,75 @@ async function handler(req: Request): Promise<Response> {
   }
 }
 
-// Audio proxy endpoint to bypass CORS
-async function proxyAudio(url: string): Promise<Response> {
+// Audio proxy endpoint to bypass CORS with range request support
+async function proxyAudio(url: string, req: Request): Promise<Response> {
   try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
-    });
+    const headers: Record<string, string> = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "*/*",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Referer": "https://www.youtube.com/",
+      "Origin": "https://www.youtube.com",
+    };
     
-    if (!response.ok) {
-      return new Response("Failed to fetch audio", { status: 502 });
+    // Forward range header for seeking support
+    const rangeHeader = req.headers.get("Range");
+    if (rangeHeader) {
+      headers["Range"] = rangeHeader;
     }
     
-    const headers = new Headers();
-    headers.set("Content-Type", response.headers.get("Content-Type") || "audio/mp4");
-    headers.set("Access-Control-Allow-Origin", "*");
-    headers.set("Cache-Control", "public, max-age=3600");
+    const response = await fetch(url, { headers });
+    
+    if (!response.ok && response.status !== 206) {
+      console.error(`[Proxy] Upstream error: ${response.status} ${response.statusText}`);
+      return new Response(`Failed to fetch audio: ${response.status}`, { 
+        status: 502,
+        headers: corsHeaders 
+      });
+    }
+    
+    const responseHeaders = new Headers();
+    responseHeaders.set("Access-Control-Allow-Origin", "*");
+    responseHeaders.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+    responseHeaders.set("Access-Control-Allow-Headers", "Range, Content-Type");
+    responseHeaders.set("Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges");
+    responseHeaders.set("Cache-Control", "public, max-age=3600");
+    
+    // Copy important headers from upstream
+    const contentType = response.headers.get("Content-Type");
+    if (contentType) {
+      responseHeaders.set("Content-Type", contentType);
+    } else {
+      responseHeaders.set("Content-Type", "audio/mp4");
+    }
     
     const contentLength = response.headers.get("Content-Length");
     if (contentLength) {
-      headers.set("Content-Length", contentLength);
+      responseHeaders.set("Content-Length", contentLength);
     }
     
-    return new Response(response.body, { headers });
+    const contentRange = response.headers.get("Content-Range");
+    if (contentRange) {
+      responseHeaders.set("Content-Range", contentRange);
+    }
+    
+    const acceptRanges = response.headers.get("Accept-Ranges");
+    if (acceptRanges) {
+      responseHeaders.set("Accept-Ranges", acceptRanges);
+    } else {
+      responseHeaders.set("Accept-Ranges", "bytes");
+    }
+    
+    return new Response(response.body, { 
+      status: response.status,
+      headers: responseHeaders 
+    });
   } catch (err) {
-    return new Response("Proxy error: " + String(err), { status: 502 });
+    console.error("[Proxy] Error:", err);
+    return new Response("Proxy error: " + String(err), { 
+      status: 502,
+      headers: corsHeaders 
+    });
   }
 }
 

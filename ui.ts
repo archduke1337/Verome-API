@@ -278,7 +278,32 @@ function showTab(t){
 function onYouTubeIframeAPIReady(){
   yt=new YT.Player('ytplayer',{height:'0',width:'0',playerVars:{autoplay:1,controls:0},events:{onReady:()=>ready=true,onStateChange:onState,onError:onErr}});
 }
-function onErr(e){if(e.data===150||e.data===101)setTimeout(()=>play(idx+1),500)}
+function onErr(e){
+  if(e.data===150||e.data===101||e.data===100){
+    // Try fallbackVideoId first, then search YouTube
+    var s=songs[idx];
+    if(s&&s.fallbackVideoId&&!s.triedFallback){
+      console.log('Using fallback:',s.fallbackVideoId);
+      s.triedFallback=true;
+      yt.loadVideoById(s.fallbackVideoId);
+    }else if(s&&!s.triedSearch){
+      // Search YouTube for playable version
+      s.triedSearch=true;
+      searchYouTube(s.title,s.artists?.[0]?.name||'').then(vid=>{
+        if(vid){console.log('Found alternative:',vid);yt.loadVideoById(vid)}
+      });
+    }
+  }
+}
+async function searchYouTube(title,artist){
+  try{
+    var q=title+' '+artist+' official';
+    var res=await fetch('/api/yt_search?q='+encodeURIComponent(q)+'&filter=videos');
+    var data=await res.json();
+    var alt=data.results?.find(v=>v.channel?.name&&!v.channel.name.includes('Topic')&&v.id);
+    return alt?.id||null;
+  }catch(e){return null}
+}
 function onState(e){
   if(e.data===1){playing=true;document.getElementById('playBtn').textContent='⏸';startProgress()}
   else if(e.data===2){playing=false;document.getElementById('playBtn').textContent='▶';stopProgress()}
