@@ -170,6 +170,7 @@ export const html = `<!DOCTYPE html>
           <option value="song">Song Details</option>
           <option value="album">Album</option>
           <option value="artist">Artist</option>
+          <option value="playlist">Playlist</option>
           <option value="chain">Full Chain</option>
           <option value="related">Related</option>
           <option value="radio">Radio</option>
@@ -289,10 +290,17 @@ function render(f){
   var el=document.getElementById('results');
   if(!songs.length){el.innerHTML='<div class="empty">No results</div>';return}
   el.innerHTML=songs.map((s,i)=>{
-    var playable=s.videoId&&(s.resultType==='song'||s.resultType==='video'||!s.resultType);
-    var click=playable?'play('+i+')':s.resultType==='artist'?'viewArtist("'+s.browseId+'")':s.resultType==='album'?'viewAlbum("'+s.browseId+'")':'';
+    var type=s.resultType||'song';
+    var playable=s.videoId&&(type==='song'||type==='video');
+    var click='';
+    if(playable){click='play('+i+')';}
+    else if(type==='artist'&&s.browseId){click='viewArtist("'+s.browseId+'")';}
+    else if(type==='album'&&s.browseId){click='viewAlbum("'+s.browseId+'")';}
+    else if(type==='playlist'&&(s.browseId||s.playlistId)){click='viewPlaylist("'+(s.playlistId||s.browseId)+'")';}
+    else if(s.browseId){click='viewArtist("'+s.browseId+'")';}
     var img=s.thumbnails?.[0]?.url||(s.videoId?'https://img.youtube.com/vi/'+s.videoId+'/mqdefault.jpg':'');
-    return '<div class="result'+(i===idx?' active':'')+'" onclick="'+click+'"><img class="thumb" src="'+img+'"><div class="info"><div class="name">'+esc(s.title||'Unknown')+'</div><div class="artist">'+esc(s.artists?.map(a=>a.name).join(', ')||s.subtitle||'')+'</div></div><div class="dur">'+(s.duration||'')+'</div></div>';
+    var badge=type!=='song'&&type!=='video'?'<span style="font-size:.65rem;color:var(--accent);margin-left:8px;text-transform:uppercase">'+type+'</span>':'';
+    return '<div class="result'+(i===idx?' active':'')+(click?'':' disabled')+'" onclick="'+click+'" style="'+(click?'cursor:pointer':'opacity:0.5;cursor:default')+'"><img class="thumb" src="'+img+'"><div class="info"><div class="name">'+esc(s.title||s.name||'Unknown')+badge+'</div><div class="artist">'+esc(s.artists?.map(a=>a.name).join(', ')||s.subtitle||'')+'</div></div><div class="dur">'+(s.duration||'')+'</div></div>';
   }).join('');
 }
 
@@ -311,6 +319,7 @@ function next(){if(idx<songs.length-1)play(idx+1)}
 function esc(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML}
 function viewArtist(id){showTab('tester');document.getElementById('endpoint').value='artist';updateInputs();document.getElementById('api_browseId').value=id;updateUrl();testApi()}
 function viewAlbum(id){showTab('tester');document.getElementById('endpoint').value='album';updateInputs();document.getElementById('api_browseId').value=id;updateUrl();testApi()}
+function viewPlaylist(id){showTab('tester');document.getElementById('endpoint').value='playlist';updateInputs();document.getElementById('api_playlistId').value=id;updateUrl();testApi()}
 
 var cfg={
   search:{inputs:[{n:'q',p:'Query',v:'coldplay'}],url:'/api/search'},
@@ -318,6 +327,7 @@ var cfg={
   song:{inputs:[{n:'videoId',p:'Video ID',v:'dQw4w9WgXcQ'}],url:'/api/songs/{videoId}'},
   album:{inputs:[{n:'browseId',p:'Album ID',v:'MPREb_PvMNqFUp1oW'}],url:'/api/albums/{browseId}'},
   artist:{inputs:[{n:'browseId',p:'Artist ID',v:'UCIaFw5VBEK8qaW6nRpx_qnw'}],url:'/api/artists/{browseId}'},
+  playlist:{inputs:[{n:'playlistId',p:'Playlist ID',v:'RDCLAK5uy_k'}],url:'/api/playlists/{playlistId}'},
   chain:{inputs:[{n:'videoId',p:'Video ID',v:'9qnqYL0eNNI'}],url:'/api/chain/{videoId}'},
   related:{inputs:[{n:'id',p:'Video ID',v:'dQw4w9WgXcQ'}],url:'/api/related/{id}'},
   radio:{inputs:[{n:'videoId',p:'Video ID',v:'9qnqYL0eNNI'}],url:'/api/radio'},
