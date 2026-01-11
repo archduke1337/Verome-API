@@ -293,14 +293,29 @@ function render(f,append){
     var type=s.resultType||'song';
     var playable=s.videoId&&(type==='song'||type==='video');
     var click='';
-    if(playable){click='play('+i+')';}
-    else if(type==='artist'&&s.browseId){click='viewArtist("'+s.browseId+'")';}
-    else if(type==='album'&&s.browseId){click='viewAlbum("'+s.browseId+'")';}
-    else if(type==='playlist'&&(s.browseId||s.playlistId)){click='viewPlaylist("'+(s.playlistId||s.browseId)+'")';}
-    else if(s.browseId){click='viewArtist("'+s.browseId+'")';}
+    // Check browseId prefix to determine actual type
+    var bid=s.browseId||'';
+    var isPlaylist=bid.startsWith('VL')||bid.startsWith('RDCLAK')||type==='playlist';
+    var isAlbum=bid.startsWith('MPRE')&&!isPlaylist;
+    var isArtist=bid.startsWith('UC')||type==='artist';
+    
+    if(playable){
+      click='play('+i+')';
+    }else if(isPlaylist&&bid){
+      click="viewPlaylist('"+bid+"')";
+      type='playlist';
+    }else if(isAlbum&&bid){
+      click="viewAlbum('"+bid+"')";
+      type='album';
+    }else if(isArtist&&bid){
+      click="viewArtist('"+bid+"')";
+      type='artist';
+    }else if(bid){
+      click="viewArtist('"+bid+"')";
+    }
     var img=s.thumbnails?.[0]?.url||(s.videoId?'https://img.youtube.com/vi/'+s.videoId+'/mqdefault.jpg':'');
     var badge=type!=='song'&&type!=='video'?'<span style="font-size:.65rem;color:var(--accent);margin-left:8px;text-transform:uppercase">'+type+'</span>':'';
-    return '<div class="result'+(i===idx?' active':'')+(click?'':' disabled')+'" onclick="'+click+'" style="'+(click?'cursor:pointer':'opacity:0.5;cursor:default')+'"><img class="thumb" src="'+img+'"><div class="info"><div class="name">'+esc(s.title||s.name||'Unknown')+badge+'</div><div class="artist">'+esc(s.artists?.map(a=>a.name).join(', ')||s.subtitle||'')+'</div></div><div class="dur">'+(s.duration||'')+'</div></div>';
+    return '<div class="result'+(i===idx?' active':'')+'" onclick="'+click+'" style="cursor:pointer"><img class="thumb" src="'+img+'"><div class="info"><div class="name">'+esc(s.title||s.name||'Unknown')+badge+'</div><div class="artist">'+esc(s.artists?.map(a=>a.name).join(', ')||s.subtitle||'')+'</div></div><div class="dur">'+(s.duration||'')+'</div></div>';
   }).join('');
   if(append)el.innerHTML+=html;
   else el.innerHTML=html;
