@@ -256,7 +256,7 @@ async function handler(req: Request): Promise<Response> {
       return proxyAudio(audioUrl, req);
     }
 
-    // Download audio as MP3
+    // Download audio as M4A
     if (pathname === "/api/download") {
       const id = searchParams.get("id");
       const title = searchParams.get("title") || "audio";
@@ -269,14 +269,14 @@ async function handler(req: Request): Promise<Response> {
       
       const piped = await fetchFromPiped(id);
       if (piped.success && piped.streamingUrls) {
-        // Check for mimeType or type field, and quality or audioQuality
+        // Find best audio - prefer mp4/m4a with MEDIUM quality
         const audio = piped.streamingUrls.find((s: any) => 
-          (s.mimeType?.includes("audio") || s.type?.includes("audio")) && 
-          (s.quality === "AUDIO_QUALITY_MEDIUM" || s.audioQuality === "AUDIO_QUALITY_MEDIUM")
-        ) || piped.streamingUrls.find((s: any) => s.mimeType?.includes("audio") || s.type?.includes("audio"));
+          s.type?.includes("audio/mp4") && s.audioQuality === "AUDIO_QUALITY_MEDIUM"
+        ) || piped.streamingUrls.find((s: any) => s.type?.includes("audio"));
         if (audio) {
-          audioUrl = audio.url || audio.directUrl;
-          contentType = audio.mimeType || audio.type || "audio/mp4";
+          // Use proxy URL (url field) - directUrl is IP-locked
+          audioUrl = audio.url;
+          contentType = audio.type?.split(";")[0] || "audio/mp4";
         }
       }
       
@@ -284,36 +284,28 @@ async function handler(req: Request): Promise<Response> {
         const invidious = await fetchFromInvidious(id);
         if (invidious.success && invidious.streamingUrls) {
           const audio = invidious.streamingUrls.find((s: any) => 
-            (s.mimeType?.includes("audio") || s.type?.includes("audio")) && 
-            (s.quality === "AUDIO_QUALITY_MEDIUM" || s.audioQuality === "AUDIO_QUALITY_MEDIUM")
-          ) || invidious.streamingUrls.find((s: any) => s.mimeType?.includes("audio") || s.type?.includes("audio"));
+            s.type?.includes("audio/mp4") && s.audioQuality === "AUDIO_QUALITY_MEDIUM"
+          ) || invidious.streamingUrls.find((s: any) => s.type?.includes("audio"));
           if (audio) {
-            audioUrl = audio.url || audio.directUrl;
-            contentType = audio.mimeType || audio.type || "audio/mp4";
+            audioUrl = audio.url;
+            contentType = audio.type?.split(";")[0] || "audio/mp4";
           }
         }
       }
 
       if (!audioUrl) return json({ success: false, error: "No audio stream found" }, 404);
 
-      // Create filename - use m4a for mp4 audio, webm for webm
+      // Create filename
       const ext = contentType.includes("webm") ? ".webm" : ".m4a";
       const filename = `${artist ? artist + " - " : ""}${title}`.replace(/[<>:"/\\|?*]/g, "").trim() + ext;
 
       try {
-        const response = await fetch(audioUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Referer": "https://www.youtube.com/",
-            "Origin": "https://www.youtube.com",
-          },
-        });
-
-        if (!response.ok) return json({ success: false, error: "Failed to fetch audio" }, 502);
+        const response = await fetch(audioUrl);
+        if (!response.ok) return json({ success: false, error: "Failed to fetch audio: " + response.status }, 502);
 
         return new Response(response.body, {
           headers: {
-            "Content-Type": "audio/mp4",
+            "Content-Type": contentType,
             "Content-Disposition": `attachment; filename="${encodeURIComponent(filename)}"`,
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Expose-Headers": "Content-Disposition",
