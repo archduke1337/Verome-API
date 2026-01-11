@@ -237,6 +237,7 @@ export const html = `<!DOCTYPE html>
   window.onerror=function(){return true};
   window.onunhandledrejection=function(e){e.preventDefault();return true};
 })();
+// Use nocookie domain for less tracking
 var tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
 var songs=[],yt=null,ready=false,playing=false,idx=-1,interval=null;
 document.getElementById('query').onkeypress=e=>{if(e.key==='Enter')search()};
@@ -249,7 +250,7 @@ function showTab(t){
 }
 
 function onYouTubeIframeAPIReady(){
-  yt=new YT.Player('ytplayer',{height:'0',width:'0',playerVars:{autoplay:1,controls:0},events:{onReady:()=>ready=true,onStateChange:onState,onError:onErr}});
+  yt=new YT.Player('ytplayer',{height:'0',width:'0',host:'https://www.youtube-nocookie.com',playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,modestbranding:1,rel:0},events:{onReady:()=>ready=true,onStateChange:onState,onError:onErr}});
 }
 function onErr(e){
   if(e.data===150||e.data===101||e.data===100){
