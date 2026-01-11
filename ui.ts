@@ -1,5 +1,5 @@
 /**
- * Virome API - UI HTML Template
+ * Virome API - Premium UI Template
  */
 
 export const html = `<!DOCTYPE html>
@@ -9,73 +9,107 @@ export const html = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Virome API</title>
   <link rel="icon" href="/assets/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#000;min-height:100vh;color:#fff}
-    .container{max-width:1000px;margin:0 auto;padding:60px 24px 200px}
-    .header{display:flex;align-items:center;gap:16px;margin-bottom:48px}
-    .logo{width:48px;height:48px;border-radius:12px}
-    .brand{font-size:2rem;font-weight:700;background:linear-gradient(90deg,#00d4aa,#00a8cc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .badge{background:linear-gradient(90deg,#a855f7,#ec4899,#f97316,#a855f7);background-size:300% 100%;color:#fff;font-size:.55rem;font-weight:600;padding:2px 6px;border-radius:4px;animation:gradientShift 3s ease infinite;position:absolute;top:0;right:-70px;text-transform:uppercase;letter-spacing:.5px}
-    @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-    .brand-wrap{position:relative;display:inline-block}
-    .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:48px}
-    @media(max-width:640px){.cards{grid-template-columns:1fr}}
-    .card{padding:24px 0}
-    .card-label{font-size:.7rem;font-weight:600;padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:12px;text-transform:uppercase}
-    .card-label.green{background:rgba(34,197,94,.15);color:#22c55e}
-    .card-label.purple{background:rgba(168,85,247,.15);color:#a855f7}
-    .card-label.blue{background:rgba(59,130,246,.15);color:#3b82f6}
-    .card-label.pink{background:rgba(236,72,153,.15);color:#ec4899}
-    .card-title{font-size:1.25rem;font-weight:600;margin-bottom:8px}
-    .card-desc{font-size:.9rem;color:#6b7280;line-height:1.5}
-    .tabs{display:flex;gap:0;margin-bottom:32px;border-bottom:1px solid #1a1a1a}
-    .tab{padding:14px 24px;background:none;border:none;color:#6b7280;font-size:.9rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
-    .tab:hover{color:#00d4aa}.tab.active{color:#00d4aa;border-bottom-color:#00d4aa}
+    :root{--accent:#00d4aa;--accent2:#00a8cc;--accent3:#a855f7;--glass:rgba(255,255,255,.03);--glass-border:rgba(255,255,255,.08);--text:#fff;--text-muted:#71717a;--text-dim:#3f3f46}
+    body{font-family:'Inter',system-ui,sans-serif;min-height:100vh;color:var(--text);background:#050505}
+    .bg-mesh{position:fixed;inset:0;z-index:-1;overflow:hidden}
+    .bg-mesh::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 20% 20%,rgba(0,212,170,.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(168,85,247,.08) 0%,transparent 50%),radial-gradient(ellipse at 40% 60%,rgba(0,168,204,.06) 0%,transparent 40%);animation:meshMove 20s ease-in-out infinite}
+    .bg-mesh::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 0%,#050505 70%)}
+    @keyframes meshMove{0%,100%{transform:translate(0,0)}50%{transform:translate(-1%,1%)}}
+    .container{max-width:1100px;margin:0 auto;padding:80px 32px 220px}
+    .header{display:flex;align-items:center;gap:20px;margin-bottom:64px}
+    .logo{width:56px;height:56px;border-radius:16px;box-shadow:0 8px 32px rgba(0,212,170,.2)}
+    .brand{font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .brand-wrap{position:relative}
+    .badge{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;font-size:.6rem;font-weight:600;padding:4px 10px;border-radius:20px;position:absolute;top:-8px;right:-80px;text-transform:uppercase}
+    .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:64px}
+    @media(max-width:700px){.cards{grid-template-columns:1fr}}
+    .card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;padding:28px;transition:all .3s}
+    .card:hover{transform:translateY(-4px);border-color:rgba(0,212,170,.3);box-shadow:0 20px 40px rgba(0,0,0,.3)}
+    .card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:16px}
+    .card-icon.green{background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(0,212,170,.2))}
+    .card-icon.purple{background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(236,72,153,.2))}
+    .card-icon.blue{background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(0,168,204,.2))}
+    .card-icon.pink{background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(244,114,182,.2))}
+    .card-title{font-size:1.15rem;font-weight:600;margin-bottom:8px}
+    .card-desc{font-size:.9rem;color:var(--text-muted);line-height:1.6}
+    .tabs{display:flex;gap:8px;margin-bottom:40px;padding:6px;background:var(--glass);border:1px solid var(--glass-border);border-radius:16px;width:fit-content}
+    .tab{padding:12px 24px;background:transparent;border:none;color:var(--text-muted);font-size:.9rem;font-weight:500;cursor:pointer;border-radius:12px;transition:all .2s}
+    .tab:hover{color:var(--text);background:rgba(255,255,255,.05)}
+    .tab.active{color:var(--text);background:linear-gradient(135deg,rgba(0,212,170,.15),rgba(0,168,204,.15))}
     .tab-content{display:none}.tab-content.active{display:block}
-    .section-title{font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;color:#00d4aa;margin:32px 0 16px;font-weight:600}
-    .api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
-    .api-card{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:16px;transition:border-color .2s}
-    .api-card:hover{border-color:#00d4aa}
-    .api-method{display:inline-block;font-size:.6rem;font-weight:700;padding:3px 8px;border-radius:4px;margin-right:10px;background:rgba(34,197,94,.15);color:#22c55e}
+    .section-title{font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin:40px 0 20px;font-weight:600;display:flex;align-items:center;gap:12px}
+    .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--glass-border),transparent)}
+    .api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+    .api-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:18px 20px;transition:all .2s;cursor:pointer}
+    .api-card:hover{border-color:var(--accent);transform:translateX(4px)}
+    .api-method{display:inline-block;font-size:.65rem;font-weight:700;padding:4px 10px;border-radius:6px;margin-right:12px;background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(0,212,170,.2));color:#22c55e}
     .api-path{font-family:monospace;font-size:.85rem;color:#e5e5e5}
-    .api-desc{font-size:.8rem;color:#525252;margin-top:8px}
-    .search-box{display:flex;gap:12px;margin-bottom:24px}
-    .search-input{flex:1;background:#0a0a0a;border:1px solid #1a1a1a;padding:14px 18px;border-radius:10px;color:#fff;font-size:1rem}
-    .search-input:focus{outline:none;border-color:#00d4aa}
-    .search-input::placeholder{color:#525252}
-    .btn{background:linear-gradient(135deg,#00d4aa,#00a8cc);color:#000;border:none;padding:14px 28px;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer}
-    .btn:hover{opacity:.9}.btn:disabled{opacity:.5}
-    .btn-sm{padding:12px 20px;font-size:.85rem}
+    .api-desc{font-size:.8rem;color:var(--text-dim);margin-top:10px}
+    .search-box{display:flex;gap:14px;margin-bottom:28px}
+    .search-input,.api-input{flex:1;background:var(--glass);border:1px solid var(--glass-border);padding:16px 22px;border-radius:14px;color:var(--text);font-size:1rem;font-family:inherit;transition:all .2s}
+    .search-input:focus,.api-input:focus{outline:none;border-color:var(--accent)}
+    .search-input::placeholder,.api-input::placeholder{color:var(--text-dim)}
+    .api-select{background:var(--glass);border:1px solid var(--glass-border);padding:16px 22px;border-radius:14px;color:var(--text);font-size:.9rem;font-family:inherit;cursor:pointer}
+    .api-select:focus{outline:none;border-color:var(--accent)}
+    .api-select option{background:#0a0a0a}
+    .btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;border:none;padding:16px 32px;border-radius:14px;font-size:.95rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(0,212,170,.3)}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,212,170,.4)}
+    .btn:disabled{opacity:.5}
+    .btn-sm{padding:14px 24px;font-size:.85rem}
+    .results-list{max-height:55vh;overflow-y:auto}
+    .result-item{display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:14px;cursor:pointer;transition:all .2s;border:1px solid transparent}
+    .result-item:hover{background:var(--glass);border-color:var(--glass-border)}
+    .result-item.active{background:linear-gradient(135deg,rgba(0,212,170,.1),rgba(0,168,204,.1));border-color:rgba(0,212,170,.3)}
+    .result-thumb{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--glass)}
+    .result-info{flex:1;min-width:0}
+    .result-title{font-size:.95rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .result-artist{font-size:.8rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .result-duration{font-size:.8rem;color:var(--text-dim);font-family:monospace}
+    .no-results,.loading{padding:60px;text-align:center;color:var(--text-dim)}
+    .loading{color:var(--accent);display:none}
+    .player{position:fixed;bottom:0;left:0;right:0;background:rgba(5,5,5,.95);backdrop-filter:blur(30px);border-top:1px solid var(--glass-border);padding:20px 32px;display:none;z-index:100}
+    .player.visible{display:block}
+    .player-content{max-width:1100px;margin:0 auto}
+    .player-main{display:flex;align-items:center;gap:20px;margin-bottom:14px}
+    .player-thumb{width:60px;height:60px;border-radius:10px;object-fit:cover;background:var(--glass)}
+    .player-info{flex:1;min-width:0}
+    .player-title{font-size:1rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .player-artist{color:var(--text-muted);font-size:.85rem}
+    .player-controls{display:flex;align-items:center;gap:12px}
+    .ctrl-btn{width:44px;height:44px;border-radius:50%;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .ctrl-btn:hover{background:rgba(255,255,255,.1)}
+    .ctrl-btn.play{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#000;width:52px;height:52px}
+    .progress-wrap{display:flex;align-items:center;gap:14px}
+    .progress-time{font-size:.75rem;color:var(--text-muted);min-width:45px;font-family:monospace}
+    .progress-bar{flex:1;height:5px;background:var(--glass);border-radius:3px;cursor:pointer}
+    .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;width:0%}
+    .api-row{display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+    .api-input{min-width:180px}
+    .country-select-wrap{position:relative;flex:1;min-width:220px}
+    .country-list{display:none;position:absolute;top:100%;left:0;right:0;background:rgba(10,10,10,.98);border:1px solid var(--glass-border);border-radius:14px;max-height:220px;overflow-y:auto;z-index:100;margin-top:6px}
+    .country-item{padding:12px 18px;cursor:pointer;font-size:.9rem;transition:all .15s}
+    .country-item:hover{background:var(--glass);color:var(--accent)}
+    .api-response{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:24px;margin-top:24px;max-height:420px;overflow:auto}
+    .api-response pre{font-family:monospace;font-size:.8rem;color:var(--accent);white-space:pre-wrap;word-break:break-all}
+    .api-url{font-family:monospace;font-size:.8rem;color:var(--text-muted);margin-bottom:18px;padding:14px 18px;background:var(--glass);border-radius:10px;border:1px solid var(--glass-border)}
+    footer{margin-top:60px;color:var(--text-dim);font-size:.8rem;text-align:center}
   </style>
 </head>
 <body>
+  <div class="bg-mesh"></div>
   <div class="container">
     <div class="header">
       <img src="/assets/logo.png" alt="Virome" class="logo">
-      <span class="brand-wrap"><span class="brand">Virome API</span><span class="badge">UNOFFICIAL</span></span>
+      <span class="brand-wrap"><span class="brand">Virome API</span><span class="badge">Unofficial</span></span>
     </div>
     <div class="cards">
-      <div class="card">
-        <span class="card-label green">Get Started</span>
-        <h3 class="card-title">Explore the Docs</h3>
-        <p class="card-desc">Check out the documentation to learn how to use the Virome API for music search and streaming.</p>
-      </div>
-      <div class="card">
-        <span class="card-label purple">Open Source</span>
-        <h3 class="card-title">Open Source</h3>
-        <p class="card-desc">Virome API is open-source. Built with Deno for fast, secure music data access.</p>
-      </div>
-      <div class="card">
-        <span class="card-label blue">Features</span>
-        <h3 class="card-title">What You Can Do</h3>
-        <p class="card-desc">Search songs, albums, artists. Get streaming URLs, related tracks, and more.</p>
-      </div>
-      <div class="card">
-        <span class="card-label pink">Try It</span>
-        <h3 class="card-title">Test the Player</h3>
-        <p class="card-desc">Use the built-in player to search and play music directly from the API.</p>
-      </div>
+      <div class="card"><div class="card-icon green">📚</div><h3 class="card-title">Explore the Docs</h3><p class="card-desc">Comprehensive documentation to integrate Virome API into your music applications.</p></div>
+      <div class="card"><div class="card-icon purple">⚡</div><h3 class="card-title">Open Source</h3><p class="card-desc">Built with Deno for blazing fast, secure, and modern music data access.</p></div>
+      <div class="card"><div class="card-icon blue">🎵</div><h3 class="card-title">Full Featured</h3><p class="card-desc">Search songs, albums, artists. Stream music, get lyrics, and discover new tracks.</p></div>
+      <div class="card"><div class="card-icon pink">�</div><h3 class="card-title">Live Player</h3><p class="card-desc">Test the API with our built-in player. Search and play music instantly.</p></div>
     </div>
     <div class="tabs">
       <button class="tab active" onclick="switchTab('docs')">Documentation</button>
@@ -85,8 +119,8 @@ export const html = `<!DOCTYPE html>
     <div id="docsTab" class="tab-content active">
       <div class="section-title">Search Endpoints</div>
       <div class="api-grid">
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/search</span><div class="api-desc">Search YouTube Music. Params: q, filter (songs/albums/artists)</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/yt_search</span><div class="api-desc">Search YouTube. Params: q, filter (videos/channels/playlists)</div></div>
+        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/search</span><div class="api-desc">Search YouTube Music. Params: q, filter, region, language</div></div>
+        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/yt_search</span><div class="api-desc">Search YouTube. Params: q, filter</div></div>
         <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/search/suggestions</span><div class="api-desc">Get search suggestions. Params: q</div></div>
       </div>
       <div class="section-title">Content Endpoints</div>
@@ -98,74 +132,20 @@ export const html = `<!DOCTYPE html>
       </div>
       <div class="section-title">Discovery Endpoints</div>
       <div class="api-grid">
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/related/:videoId</span><div class="api-desc">Get related songs for a video</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/similar</span><div class="api-desc">Find similar tracks. Params: title, artist</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/trending</span><div class="api-desc">Most played songs in a country</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/radio</span><div class="api-desc">Generate radio mix. Params: videoId</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/top/artists</span><div class="api-desc">Most listened artists in a country</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/top/tracks</span><div class="api-desc">Most listened tracks in a country</div></div>
-      </div>
-      <div class="section-title">Info Endpoints</div>
-      <div class="api-grid">
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/lyrics</span><div class="api-desc">Get lyrics. Params: title, artist</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/artist/info</span><div class="api-desc">Artist bio and stats. Params: artist</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/track/info</span><div class="api-desc">Track details. Params: title, artist</div></div>
+        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/related/:videoId</span><div class="api-desc">Get related songs</div></div>
+        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/similar</span><div class="api-desc">Find similar tracks</div></div>
+        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/trending</span><div class="api-desc">Trending music by country</div></div>
+        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/radio</span><div class="api-desc">Generate radio mix</div></div>
       </div>
       <div class="section-title">Streaming Endpoints</div>
       <div class="api-grid">
         <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/stream</span><div class="api-desc">Get stream URLs. Params: id</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/watch_playlist</span><div class="api-desc">Get watch playlist. Params: videoId or playlistId</div></div>
-        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/health</span><div class="api-desc">Health check endpoint</div></div>
+        <div class="api-card"><span class="api-method">GET</span><span class="api-path">/api/lyrics</span><div class="api-desc">Get lyrics. Params: title, artist</div></div>
       </div>
     </div>
-
     <div id="playerTab" class="tab-content">
-      <style>
-        .results-list{max-height:50vh;overflow-y:auto}
-        .result-item{display:flex;align-items:center;gap:14px;padding:14px;border-radius:10px;cursor:pointer;transition:background .2s}
-        .result-item:hover{background:#0a0a0a}
-        .result-item.active{background:#0f0f0f;border:1px solid #1a1a1a}
-        .result-thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;background:#1a1a1a}
-        .result-info{flex:1;min-width:0}
-        .result-title{font-size:.95rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .result-artist{font-size:.8rem;color:#525252;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .result-duration{font-size:.8rem;color:#3f3f3f}
-        .no-results{padding:48px;text-align:center;color:#3f3f3f}
-        .loading{padding:48px;text-align:center;color:#00d4aa;display:none}
-        .player{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);border-top:1px solid #1a1a1a;padding:16px 24px;display:none}
-        .player.visible{display:block}
-        .player-content{max-width:1000px;margin:0 auto}
-        .player-main{display:flex;align-items:center;gap:16px;margin-bottom:12px}
-        .player-thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;background:#1a1a1a}
-        .player-info{flex:1;min-width:0}
-        .player-title{font-size:.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .player-artist{color:#525252;font-size:.75rem}
-        .player-controls{display:flex;align-items:center;gap:10px}
-        .ctrl-btn{width:40px;height:40px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-        .ctrl-btn:hover{background:#262626}
-        .ctrl-btn.play{background:linear-gradient(135deg,#00d4aa,#00a8cc);color:#000;width:48px;height:48px}
-        .progress-wrap{display:flex;align-items:center;gap:12px}
-        .progress-time{font-size:.7rem;color:#525252;min-width:40px}
-        .progress-bar{flex:1;height:4px;background:#1a1a1a;border-radius:2px;cursor:pointer}
-        .progress-fill{height:100%;background:linear-gradient(90deg,#00d4aa,#00a8cc);border-radius:2px;width:0%}
-        .api-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
-        .api-select{background:#0a0a0a;border:1px solid #1a1a1a;padding:14px 18px;border-radius:10px;color:#fff;font-size:.9rem;min-width:220px}
-        .api-select:focus{outline:none;border-color:#00d4aa}
-        .api-select option{background:#000}
-        .api-input{background:#0a0a0a;border:1px solid #1a1a1a;padding:14px 18px;border-radius:10px;color:#fff;font-size:.9rem;flex:1;min-width:150px}
-        .api-input:focus{outline:none;border-color:#00d4aa}
-        .api-input::placeholder{color:#525252}
-        .country-select-wrap{position:relative;flex:1;min-width:200px}
-        .country-list{display:none;position:absolute;top:100%;left:0;right:0;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;max-height:200px;overflow-y:auto;z-index:100;margin-top:4px}
-        .country-item{padding:10px 14px;cursor:pointer;font-size:.85rem;color:#fff}
-        .country-item:hover{background:#1a1a1a;color:#00d4aa}
-        .api-response{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:10px;padding:20px;margin-top:20px;max-height:400px;overflow:auto}
-        .api-response pre{font-family:monospace;font-size:.8rem;color:#00d4aa;white-space:pre-wrap;word-break:break-all}
-        .api-url{font-family:monospace;font-size:.8rem;color:#525252;margin-bottom:16px;padding:12px 16px;background:#0a0a0a;border-radius:8px;border:1px solid #1a1a1a}
-        footer{margin-top:48px;color:#3f3f3f;font-size:.75rem;text-align:center}
-      </style>
       <div class="search-box">
-        <select class="api-select" id="searchType" style="min-width:120px">
+        <select class="api-select" id="searchType" style="min-width:130px">
           <option value="">All</option>
           <option value="songs">Songs</option>
           <option value="videos">Videos</option>
@@ -181,7 +161,7 @@ export const html = `<!DOCTYPE html>
     </div>
     <div id="apiTab" class="tab-content">
       <div class="api-row">
-        <select class="api-select" id="apiEndpoint" onchange="updateApiInputs()">
+        <select class="api-select" id="apiEndpoint" onchange="updateApiInputs()" style="min-width:240px">
           <option value="search">Search Songs</option>
           <option value="stream">Get Stream URLs</option>
           <option value="song">Get Song Details</option>
@@ -205,16 +185,13 @@ export const html = `<!DOCTYPE html>
       <button class="btn btn-sm" onclick="testApi()">Test Endpoint</button>
       <div class="api-response" id="apiResponse"><pre>Click "Test Endpoint" to see the response...</pre></div>
     </div>
-    <footer>Virome API</footer>
+    <footer>Built with Deno</footer>
   </div>
   <div class="player" id="player">
     <div class="player-content">
       <div class="player-main">
         <img class="player-thumb" id="playerThumb" src="" alt="">
-        <div class="player-info">
-          <div class="player-title" id="playerTitle">-</div>
-          <div class="player-artist" id="playerArtist">-</div>
-        </div>
+        <div class="player-info"><div class="player-title" id="playerTitle">-</div><div class="player-artist" id="playerArtist">-</div></div>
         <div class="player-controls">
           <button class="ctrl-btn" onclick="prevSong()">⏮</button>
           <button class="ctrl-btn play" id="playBtn" onclick="togglePlay()">▶</button>
@@ -223,9 +200,7 @@ export const html = `<!DOCTYPE html>
       </div>
       <div class="progress-wrap">
         <span class="progress-time" id="currentTime">0:00</span>
-        <div class="progress-bar" id="progressBar" onclick="seek(event)">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
+        <div class="progress-bar" id="progressBar" onclick="seek(event)"><div class="progress-fill" id="progressFill"></div></div>
         <span class="progress-time" id="duration">0:00</span>
       </div>
     </div>
@@ -246,7 +221,7 @@ export const html = `<!DOCTYPE html>
     function fmt(s){var m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
     function seek(e){if(!player||!playerReady)return;var bar=document.getElementById('progressBar'),rect=bar.getBoundingClientRect(),pct=(e.clientX-rect.left)/rect.width;player.seekTo(pct*(player.getDuration()||0),true)}
     async function doSearch(){var q=document.getElementById('searchInput').value.trim();if(!q)return;var filter=document.getElementById('searchType').value;document.getElementById('searchBtn').disabled=true;document.getElementById('loading').style.display='block';document.getElementById('resultsList').innerHTML='';try{var url='/api/search?q='+encodeURIComponent(q);if(filter)url+='&filter='+filter;var res=await fetch(url);var data=await res.json();songs=data.results||[];renderResults(filter)}catch(e){songs=[];renderResults(filter)}document.getElementById('searchBtn').disabled=false;document.getElementById('loading').style.display='none'}
-    function renderResults(filter){var list=document.getElementById('resultsList');if(!songs.length){list.innerHTML='<div class="no-results">No results found</div>';return}if(filter==='artists'){list.innerHTML=songs.map((s,i)=>'<div class="result-item" onclick="openArtist(\\''+s.browseId+'\\')"><img class="result-thumb" style="border-radius:50%" src="'+(s.thumbnails?.[0]?.url||'')+'"><div class="result-info"><div class="result-title">'+esc(s.title||'Unknown')+'</div><div class="result-artist">Artist</div></div></div>').join('')}else if(filter==='albums'){list.innerHTML=songs.map((s,i)=>'<div class="result-item" onclick="openAlbum(\\''+s.browseId+'\\')"><img class="result-thumb" src="'+(s.thumbnails?.[0]?.url||'')+'"><div class="result-info"><div class="result-title">'+esc(s.title||'Unknown')+'</div><div class="result-artist">'+esc(s.artists?.map(a=>a.name).join(', ')||'Album')+'</div></div></div>').join('')}else{list.innerHTML=songs.map((s,i)=>{var isPlayable=s.videoId&&(s.resultType==='song'||s.resultType==='video'||!s.resultType);var onclick=isPlayable?'playSong('+i+')':s.resultType==='artist'?'openArtist(\\''+s.browseId+'\\')':s.resultType==='album'?'openAlbum(\\''+s.browseId+'\\')':'';var typeLabel=s.isTopResult?'<span style="color:#00d4aa;font-size:.65rem;margin-left:6px">TOP</span>':s.resultType&&s.resultType!=='song'?'<span style="color:#525252;font-size:.65rem;margin-left:6px">'+s.resultType.toUpperCase()+'</span>':'';return '<div class="result-item'+(i===currentIndex?' active':'')+'" onclick="'+onclick+'"><img class="result-thumb" src="'+(s.thumbnails?.[0]?.url||(s.videoId?'https://img.youtube.com/vi/'+s.videoId+'/mqdefault.jpg':''))+'"><div class="result-info"><div class="result-title">'+esc(s.title||'Unknown')+typeLabel+'</div><div class="result-artist">'+esc(s.artists?.map(a=>a.name).join(', ')||(s.subtitle||'Unknown'))+'</div></div><div class="result-duration">'+(s.duration||'')+'</div></div>'}).join('')}}
+    function renderResults(filter){var list=document.getElementById('resultsList');if(!songs.length){list.innerHTML='<div class="no-results">No results found</div>';return}if(filter==='artists'){list.innerHTML=songs.map((s,i)=>'<div class="result-item" onclick="openArtist(\\''+s.browseId+'\\')"><img class="result-thumb" style="border-radius:50%" src="'+(s.thumbnails?.[0]?.url||'')+'"><div class="result-info"><div class="result-title">'+esc(s.title||'Unknown')+'</div><div class="result-artist">Artist</div></div></div>').join('')}else if(filter==='albums'){list.innerHTML=songs.map((s,i)=>'<div class="result-item" onclick="openAlbum(\\''+s.browseId+'\\')"><img class="result-thumb" src="'+(s.thumbnails?.[0]?.url||'')+'"><div class="result-info"><div class="result-title">'+esc(s.title||'Unknown')+'</div><div class="result-artist">'+esc(s.artists?.map(a=>a.name).join(', ')||'Album')+'</div></div></div>').join('')}else{list.innerHTML=songs.map((s,i)=>{var isPlayable=s.videoId&&(s.resultType==='song'||s.resultType==='video'||!s.resultType);var onclick=isPlayable?'playSong('+i+')':s.resultType==='artist'?'openArtist(\\''+s.browseId+'\\')':s.resultType==='album'?'openAlbum(\\''+s.browseId+'\\')':'';var typeLabel=s.isTopResult?'<span style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-size:.55rem;padding:2px 8px;border-radius:4px;margin-left:8px;font-weight:600">TOP</span>':s.resultType&&s.resultType!=='song'?'<span style="background:var(--glass);color:var(--text-muted);font-size:.55rem;padding:2px 8px;border-radius:4px;margin-left:8px;text-transform:uppercase">'+s.resultType+'</span>':'';return '<div class="result-item'+(i===currentIndex?' active':'')+'" onclick="'+onclick+'"><img class="result-thumb" src="'+(s.thumbnails?.[0]?.url||(s.videoId?'https://img.youtube.com/vi/'+s.videoId+'/mqdefault.jpg':''))+'"><div class="result-info"><div class="result-title">'+esc(s.title||'Unknown')+typeLabel+'</div><div class="result-artist">'+esc(s.artists?.map(a=>a.name).join(', ')||(s.subtitle||'Unknown'))+'</div></div><div class="result-duration">'+(s.duration||'')+'</div></div>'}).join('')}}
     function openArtist(id){switchTab('api');document.getElementById('apiEndpoint').value='artist';updateApiInputs();document.getElementById('api_browseId').value=id;updateApiUrl();testApi()}
     function openAlbum(id){switchTab('api');document.getElementById('apiEndpoint').value='album';updateApiInputs();document.getElementById('api_browseId').value=id;updateApiUrl();testApi()}
     function playSong(i){if(!songs[i])return;if(!playerReady){setTimeout(()=>playSong(i),300);return}currentIndex=i;var s=songs[i];document.getElementById('playerTitle').textContent=s.title||'Unknown';document.getElementById('playerArtist').textContent=s.artists?.map(a=>a.name).join(', ')||'Unknown';document.getElementById('playerThumb').src=s.thumbnails?.[0]?.url||'https://img.youtube.com/vi/'+s.videoId+'/mqdefault.jpg';document.getElementById('player').className='player visible';document.querySelectorAll('.result-item').forEach((el,idx)=>el.className=idx===i?'result-item active':'result-item');player.loadVideoById(s.videoId);isPlaying=true;document.getElementById('playBtn').textContent='⏸'}
@@ -263,7 +238,7 @@ export const html = `<!DOCTYPE html>
     document.addEventListener('click',function(e){if(!e.target.classList.contains('country-search')){document.querySelectorAll('.country-list').forEach(l=>l.style.display='none')}});
     function updateApiUrl(){var ep=document.getElementById('apiEndpoint').value,cfg=apiCfg[ep],url=cfg.url,params=new URLSearchParams();cfg.inputs.forEach(i=>{var val=document.getElementById('api_'+i.n)?.value?.trim()||i.v||'';if(val){if(url.includes('{'+i.n+'}'))url=url.replace('{'+i.n+'}',encodeURIComponent(val));else params.append(i.n,val)}});var qs=params.toString();if(qs)url+='?'+qs;document.getElementById('apiUrl').textContent='GET '+url}
     document.getElementById('apiInputs').oninput=updateApiUrl;
-    async function testApi(){var ep=document.getElementById('apiEndpoint').value,cfg=apiCfg[ep],url=cfg.url,params=new URLSearchParams();cfg.inputs.forEach(i=>{var val=document.getElementById('api_'+i.n)?.value?.trim();if(val){if(url.includes('{'+i.n+'}'))url=url.replace('{'+i.n+'}',encodeURIComponent(val));else params.append(i.n,val)}});var qs=params.toString();if(qs)url+='?'+qs;document.getElementById('apiResponse').innerHTML='<pre style="color:#00d4aa">Loading...</pre>';try{var res=await fetch(url);var data=await res.json();document.getElementById('apiResponse').innerHTML='<pre>'+JSON.stringify(data,null,2)+'</pre>'}catch(e){document.getElementById('apiResponse').innerHTML='<pre style="color:#ef4444">Error: '+e.message+'</pre>'}}
+    async function testApi(){var ep=document.getElementById('apiEndpoint').value,cfg=apiCfg[ep],url=cfg.url,params=new URLSearchParams();cfg.inputs.forEach(i=>{var val=document.getElementById('api_'+i.n)?.value?.trim();if(val){if(url.includes('{'+i.n+'}'))url=url.replace('{'+i.n+'}',encodeURIComponent(val));else params.append(i.n,val)}});var qs=params.toString();if(qs)url+='?'+qs;document.getElementById('apiResponse').innerHTML='<pre style="color:var(--accent)">Loading...</pre>';try{var res=await fetch(url);var data=await res.json();document.getElementById('apiResponse').innerHTML='<pre>'+JSON.stringify(data,null,2)+'</pre>'}catch(e){document.getElementById('apiResponse').innerHTML='<pre style="color:#ef4444">Error: '+e.message+'</pre>'}}
     updateApiInputs();
   </script>
 </body>
