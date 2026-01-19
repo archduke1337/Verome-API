@@ -1,8 +1,10 @@
-<p align="center">
+<div align="center" style="display:flex; align-items:center; justify-content:center; gap:20px;">
   <img src="assets/Logo.png" alt="Virome API" width="120">
-</p>
 
-<h1 align="center">Virome API</h1>
+  <h1 style="margin:0; font-size:60px; line-height:1;">
+    Virome API
+  </h1>
+</div>
 
 <p align="center">
   Music API for YouTube Music, Lyrics & Streaming
