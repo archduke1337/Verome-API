@@ -1,0 +1,5 @@
+{
+  "name": "verome-api",
+  "compatibility_date": "2026-02-16",
+  "main": "mod.ts"
+}
