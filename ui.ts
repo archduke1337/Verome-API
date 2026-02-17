@@ -85,7 +85,7 @@ export const html = `<!DOCTYPE html>
   <div class="container">
     <div class="hero">
       <img src="/assets/logo.png" alt="Virome" class="logo">
-      <h1 class="title">Virome API</h1>
+      <h1 class="title">Grovy API</h1>
       <p class="subtitle">Music API for YouTube Music, Lyrics & Streaming</p>
     </div>
     
